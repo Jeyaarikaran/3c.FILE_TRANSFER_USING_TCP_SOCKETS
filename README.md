@@ -12,78 +12,52 @@ To write a python program for creating File Transfer using TCP Sockets Links
 ### Server.py :
 ```.py
 import socket
-import os
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 5001
-BUFFER_SIZE = 4096 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((SERVER_HOST, SERVER_PORT))
-server.listen(1)
-print("Server listening on port", SERVER_PORT)
-conn, addr = server.accept()
-print("Connected from:", addr)
-try:
-    filename = conn.recv(BUFFER_SIZE).decode()
-    filesize = int(conn.recv(BUFFER_SIZE).decode())
-    print(f"Receiving file: {filename}")
-    print(f"File size: {filesize} bytes")
-    received_size = 0
-    with open("received_" + filename, "wb") as f:
-        while received_size < filesize:
-            bytes_read = conn.recv(BUFFER_SIZE)
-            if not bytes_read:
+
+s = socket.socket()
+s.bind((socket.gethostname(), 60000))
+s.listen(5)
+
+while True:
+    c, a = s.accept()
+    msg = c.recv(1024)
+    print("Received:", msg)
+    
+    with open('mytext.txt', 'rb') as f:
+        while True:
+            d = f.read(1024)
+            if not d:
                 break
-            f.write(bytes_read)
-            received_size += len(bytes_read)
-            progress = (received_size / filesize) * 100
-            print(f"Progress: {progress:.2f}%", end="\r")
-    print("\nFile received successfully!")
-except Exception as e:
-    print("Error:", e)
-finally:
-    conn.close()
-    server.close()
+            c.send(d)
+    
+    c.send(b'Thank you')
+    c.close()
 ```
 ### client.py :
 ```.py
 import socket
-import os
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 5001
-BUFFER_SIZE = 4096
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((SERVER_HOST, SERVER_PORT))
-try:
-    filename = input("Enter file name to send: ")
-    if not os.path.exists(filename):
-        print("File does not exist!")
-        client.close()
-        exit()
-    filesize = os.path.getsize(filename)
-    client.send(filename.encode())
-    client.send(str(filesize).encode())
-    print(f"Sending {filename} ({filesize} bytes)")
-    sent_size = 0
-    with open(filename, "rb") as f:
-        while True:
-            bytes_read = f.read(BUFFER_SIZE)
-            if not bytes_read:
-                break
-            client.sendall(bytes_read)
-            sent_size += len(bytes_read)
-            progress = (sent_size / filesize) * 100
-            print(f"Progress: {progress:.2f}%", end="\r")
-    print("\nFile sent successfully!")
-except Exception as e:
-    print("Error:", e)
-finally:
-    client.close()
+
+s = socket.socket()
+s.connect((socket.gethostname(), 60000))
+s.send(b"Hello server!")
+
+with open('received_file', 'wb') as f:
+    while True:
+        d = s.recv(1024)
+        if not d:
+            break
+        print('Receiving', d)
+        f.write(d)
+
+s.close()
+print('Done')
 ```
 
 
 ## OUPUT
 
-<img width="1918" height="1198" alt="image" src="https://github.com/user-attachments/assets/4a2390f8-919e-418a-9c32-b68cac1fdccf" />
+<img width="1851" height="1151" alt="image" src="https://github.com/user-attachments/assets/d9e78b1c-ee4a-4bf9-a2e6-caf9354bde65" />
+
+
 
 
 ## RESULT
